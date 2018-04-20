@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head>
+    <meta charset="UTF-8"></meta>
+    <title>厂商管理</title>
+    <link rel="stylesheet" type="text/css" th:href="@{../../themes/default/easyui.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{../../themes/icon.css}"/>
+    <script type="text/javascript" th:src="@{../../jquery.min.js}"/>
+    <script type="text/javascript" th:src="@{../../jquery.easyui.min.js}"/>
+    <script type="text/javascript" th:src="@{../../locale/easyui-lang-zh_CN.js}"/>
+    <script type="text/javascript">
+        /*<![CDATA[*/
+        $(function () {
+            $('#goods').combobox({
+                url: '/vendor/goods',
+                valueField: 'id',
+                textField: 'text'
+            });
+
+            $('#vendorDialog').dialog({
+                title: '型号管理',
+                width: 500,
+                height: 240,
+                closed: true,
+                cache: false,
+                modal: true,
+                buttons: [{
+                    text: '保存',
+                    handler: function () {
+                        var param = {};
+                        param.id = $("#id").val();
+                        param.name = $("#name").val();
+                        param.goods = $("#goods").combobox("getValue");
+                        param.addr = $("#addr").val();
+                        param.brand = $("#brand").val();
+                        $.messager.confirm('确认操作', '您确定要进行操作吗？', function (r) {
+                            if (r) {
+                                $.ajax({
+                                    url: "/vendor/addVendor",
+                                    type: "post",
+                                    async: "true",
+                                    data: param,
+                                    success: function (data) {
+                                        var d = $.parseJSON(data);
+                                        if (d.res == 1) {
+                                            $.messager.alert("提示", "操作成功！", "info", function () {
+                                                $("#vendorDialog").dialog("close");
+                                                $("#userDatagrid").datagrid("reload");
+                                            });
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                    }
+                }, {
+                    text: '关闭',
+                    handler: function () {
+                        $('#vendorForm').dialog('close');
+                    }
+                }]
+            });
+
+        });
+
+        function add() {
+            $("#id").val("");
+            $("#name").val("");
+            $("#goods").combobox("reload");
+            $("#addr").val("");
+            $("#brand").val("");
+            $('#vendorDialog').dialog("open");
+        }
+
+        function edit() {
+            var node = $("#userDatagrid").datagrid("getSelected");
+            if (null == node) {
+                $.messager.alert("提醒", "请选择要操作的记录!", "info", function () {
+                });
+                return false;
+            }
+            console.info(node);
+            $("#id").val(node.id);
+            $("#name").val(node.name);
+            $("#addr").val(node.addr);
+            $("#goods").combobox("setValue",node.goods.id);
+            $("#brand").val(node.brand);
+            $('#vendorDialog').dialog("open");
+        }
+
+        function del() {
+            var node = $("#userDatagrid").datagrid("getSelected");
+            if (null == node) {
+                $.messager.alert("提醒", "请选择要操作的记录!", "info", function () {
+                });
+                return false;
+            }
+            $.messager.confirm('确认删除', '您确定要进行删除操作吗？', function (r) {
+                if (r) {
+                    $.ajax({
+                        url: "/vendor/delVendor",
+                        type: "post",
+                        async: "true",
+                        data: {"id": node.id},
+                        success: function (data) {
+                            $.messager.alert("提示", "删除成功！", "info", function () {
+                                $("#userDatagrid").datagrid("reload");
+                                $("#vendorDialog").dialog("close");
+                            });
+                        }
+                    });
+                }
+            });
+        }
+        function goodsName(value,row){
+            return row.goods.name;
+        }
+        function query(){
+            $('#userDatagrid').datagrid({
+                queryParams: {
+                    name: $("#name1").val()
+                }
+            });
+            $('#userDatagrid').datagrid("reload");
+        }
+
+        /*]]>*/
+
+    </script>
+</head>
+<body>
+<div id="userDatagridToolbar" style="float: right;">
+    名称：<input name="name" id="name1" size="10"/> <a data-url="searchUser" href="javascript:void(0)" class="easyui-linkbutton c5"
+                                         iconCls="icon-search" onclick="query()">搜索</a>
+    <a data-url="addVendor" href="javascript:void(0)" class="easyui-linkbutton c1" iconCls="icon-add"
+       onclick="add()">添加</a>
+    <a data-url="updateVendor" href="javascript:void(0)" class="easyui-linkbutton c2" iconCls="icon-edit"
+       onclick="edit()">编辑</a>
+    <a data-url="removeVendor" href="javascript:void(0)" class="easyui-linkbutton c3" iconCls="icon-remove"
+       onclick="del()">删除</a>
+</div>
+<table id="userDatagrid" class="easyui-datagrid" url="/vendor/vendorList" title="" fit="true" border="true"
+       fitColumns="true" singleSelect="true" pagination="true" rownumbers="true" toolbar="#userDatagridToolbar">
+    <thead>
+    <tr>
+        <th data-options="field:'id',width:100">编号</th>
+        <th data-options="field:'brand',width:300">品牌</th>
+        <th data-options="field:'name',width:300">型号</th>
+        <th data-options="field:'goods.name',width:300" formatter="goodsName">类型</th>
+        <th data-options="field:'addr',width:300">厂家</th>
+    </tr>
+    </thead>
+</table>
+<div id="vendorDialog">
+    <form name="vendorForm" id="vendorForm" action="/vendor/addVendor" method="post">
+        <table>
+            <tr>
+                <td>类型：<input type="hidden" name="id" id="id"></input></td>
+                <td><input name="goods" id="goods" style="width: 180px;"></input></td>
+                <td>型号：</td>
+                <td><input name="name" id="name"></input></td>
+            </tr>
+            <tr>
+                <td>品牌：</td>
+                <td><input name="brand" id="brand" style="width: 180px;"></input></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>厂家：</td>
+                <td colspan="3"><input name="addr" id="addr" style="width: 300px;"></input></td>
+            </tr>
+        </table>
+    </form>
+</div>
+</body>
+</html>

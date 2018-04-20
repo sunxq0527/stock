@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head>
+    <meta charset="UTF-8"></meta>
+    <title>Title</title>
+    <link rel="stylesheet" type="text/css" th:href="@{../../themes/default/easyui.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{../../themes/icon.css}"/>
+    <script type="text/javascript" th:src="@{../../jquery.min.js}"/>
+    <script type="text/javascript" th:src="@{../../jquery.easyui.min.js}"/>
+    <script type="text/javascript" th:src="@{../../locale/easyui-lang-zh_CN.js}"/>
+    <script type="text/javascript">
+        $(function(){
+            $('#userdialog').dialog({
+                title: '用户管理',
+                width: 400,
+                height: 200,
+                closed: true,
+                cache: false,
+                modal: true,
+                buttons:[{
+                    text:'保存',
+                    handler:function(){
+                        $('#userForm').submit();
+                    }
+                },{
+                    text:'关闭',
+                    handler:function(){
+                        $('#userdialog').dialog('close');
+                    }
+                }]
+            });
+        });
+        function add(){
+            $('#userdialog').dialog('open');
+        }
+        function edit(){
+            var node = $("#userDatagrid").datagrid("getSelected");
+            if (null == node) {
+                $.messager.alert("提醒", "请选择要操作的记录!", "info", function () {
+                });
+                return false;
+            }
+            $("#id").val(node.id);
+            $("#username").val(node.username);
+            $("#password").val(node.password);
+            $("#name").val(node.name);
+            $("#isadmin").val(node.isadmin);
+            $("#sex").val(node.sex);
+            $("#iPhone").val(node.iPhone);
+            $('#userdialog').dialog("open");
+        }
+        function del(){
+            var node = $("#userDatagrid").datagrid("getSelected");
+            if (null == node) {
+                $.messager.alert("提醒", "请选择要操作的记录!", "info", function () {
+                });
+                return false;
+            }
+            $.messager.confirm('确认删除', '您确定要进行删除操作吗？', function (r) {
+                if (r) {
+                    $.ajax({
+                        url: "/user/delUser",
+                        type: "post",
+                        async: "true",
+                        data: {"id": node.id},
+                        success: function (data) {
+                            $.messager.alert("提示", "删除成功！", "info", function () {
+                                $("#userDatagrid").datagrid("reload");
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+
+
+       function query(){
+           $('#userDatagrid').datagrid({
+               queryParams: {
+                   name: $("#name").val()
+               }
+           });
+           $('#userDatagrid').datagrid("reload");
+
+       }
+
+    </script>
+</head>
+<body>
+    <div id="userDatagridToolbar" style="float: right;">
+        姓名：<input name="name" size="10" id="name" /> <a data-url="searchUser" href="javascript:void(0)" class="easyui-linkbutton c5" iconCls="icon-search">搜索</a>
+        <a data-url="addUser" href="javascript:void(0)" class="easyui-linkbutton c1" iconCls="icon-add" onclick="add()">添加</a>
+        <a data-url="updateUser" href="javascript:void(0)" class="easyui-linkbutton c2" iconCls="icon-edit" onclick="edit()">编辑</a>
+        <a data-url="removeUser" href="javascript:void(0)" class="easyui-linkbutton c3" iconCls="icon-remove" onclick="del()">删除</a>
+    </div>
+    <table  id="userDatagrid" class="easyui-datagrid" url="/user/userList" title="" fit="true" border="true"
+            fitColumns="true" singleSelect="true" pagination="true" rownumbers="true" toolbar="#userDatagridToolbar" >
+        <thead>
+            <tr>
+                <th data-options="field:'id',width:100">编号</th>
+                <th data-options="field:'username',width:300">登录账号</th>
+                <th data-options="field:'name',width:300">姓名</th>
+                <th data-options="field:'iPhone',width:300">电话</th>
+            </tr>
+        </thead>
+    </table>
+    <div id="userdialog" align="center">
+        <form id="userForm" action="/user/add" method="post">
+            <table>
+                <tr>
+                    <td>账号</td>
+                    <td><input type="text" class="easyui-validatebox" id="username" name="username" data-options="required:true"/></td>
+                </tr>
+                <tr>
+                    <td>密码</td>
+                    <td><input type="password" class="easyui-validatebox" id="password" name="password"  data-options="required:true"/></td>
+                </tr>
+                <tr>
+                    <td>姓名</td>
+                    <td><input type="text"  class="easyui-textbox" id="name" name="name"/></td>
+                </tr>
+                <tr>
+                    <td>角色</td>
+                    <td><select class="easyui-select" id="isadmin" name="isadmin">
+                        <option value="1">管理员</option>
+                        <option value="0">普通员工</option>
+                    </select></td>
+                </tr>
+                <tr>
+                    <td>性别</td>
+                    <td><select class="easyui-select" id="sex" name="sex">
+                        <option value="1">男</option>
+                        <option value="0">女</option>
+                    </select></td>
+                </tr>
+                <tr>
+                    <td>电话</td>
+                    <td><input type="text"  class="easyui-textbox" id="iPhone" name="iPhone"/></td>
+                </tr>
+            </table>
+        </form>
+    </div>
+
+</body>
+</html>

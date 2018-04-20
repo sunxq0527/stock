@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head>
+    <meta charset="UTF-8"></meta>
+    <title>商品管理</title>
+    <link rel="stylesheet" type="text/css" th:href="@{../../themes/default/easyui.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{../../themes/icon.css}"/>
+    <script type="text/javascript" th:src="@{../../jquery.min.js}"/>
+    <script type="text/javascript" th:src="@{../../jquery.easyui.min.js}"/>
+    <script type="text/javascript" th:src="@{../../locale/easyui-lang-zh_CN.js}"/>
+    <script type="text/javascript">
+        /*<![CDATA[*/
+        $(function () {
+            $('#storage').dialog({
+                title: '入库',
+                width: 500,
+                height: 300,
+                closed: true,
+                cache: false,
+                modal: true,
+                buttons: [{
+                    text: '保存',
+                    handler: function () {
+                        var param = {};
+                        param.id = $("#id").val();
+                        param.name = $("#name").val();
+                        param.goods = $("#goods").combobox("getValue")
+                        param.vendor = $("#vendor").combobox("getValue")
+                        param.assetCoding = $("#assetCoding").val();
+                        param.assetType = $("#assetType").val();
+                        param.deviceCoding = $("#deviceCoding").val();
+                        param.discardedDate = $("#discardedDate").datebox("getValue");
+                        param.deviceCoding = $("#deviceCoding").val();
+                        param.num = $("#num").val();
+                        param.configure = $("#configure").val();
+                        param.context = $("#context").val();
+                        param.depart = $("#depart").val();
+                        param.company = $("#company").val();
+                        param.state="0";
+
+                        $.messager.confirm('确认操作', '您确定要进行操作吗？', function (r) {
+                            if (r) {
+                                $.ajax({
+                                    url: "/stock/addStock",
+                                    type: "post",
+                                    async: "true",
+                                    data: param,
+                                    success: function (data) {
+                                        var d = $.parseJSON(data);
+                                        if (d.res == 1) {
+                                            $.messager.alert("提示", "操作成功！", "info", function () {
+                                                $("#storage").dialog("close");
+                                                $("#userDatagrid").datagrid("reload");
+                                            });
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                    }
+                }, {
+                    text: '关闭',
+                    handler: function () {
+                        $('#storage').dialog('close');
+                    }
+                }]
+            });
+
+            $('#goods1').combobox({
+                url: '/vendor/goods',
+                valueField: 'id',
+                textField: 'text',
+                onSelect: function (row) {
+                    $('#vendor1').combobox({
+                        url: '/goods/vendorCase?id=' + row.id,
+                        valueField: 'id',
+                        textField: 'text'
+                    });
+                }
+            });
+            $('#goods').combobox({
+                url: '/vendor/goods',
+                valueField: 'id',
+                textField: 'text',
+                onSelect: function (row) {
+                    $('#vendor').combobox({
+                        url: '/goods/vendorCase?id=' + row.id,
+                        valueField: 'id',
+                        textField: 'text'
+                    });
+                }
+            });
+
+            $('#startCreateTime1').datebox({});
+            $('#endCreateTime1').datebox({});
+            $('#discardedDate').datebox({});
+
+        });
+
+        function query() {
+            var param = {};
+            param.goods = $("#goods1").combobox("getValue");
+            param.vendor = $("#vendor1").combobox("getValue");
+            param.stateCreateTime = $("#startCreateTime1").datebox("getValue");
+            param.endCreateTime = $("#endCreateTime1").datebox("getValue");
+            param.deviceCoding = $("#deviceCoding1").val();
+            param.assetCodeing = $("#assetCodeing1").val();
+            param.assetType = $("#assetType1").val();
+            param.name = $("#name1").val();
+            param.state = $("#state1").val();
+            $("#userDatagrid1").datagrid('options').queryParams = param;
+            $("#userDatagrid1").datagrid('reload');
+        }
+
+        function goBack() {
+            history.go(-1);
+        }
+
+        function goodsName(value, row) {
+            return row.goods.name;
+        }
+
+        function vendorName(value, row) {
+            return row.vendor.brand + "-" + row.vendor.name;
+        }
+
+        function setState(value,row){
+            if(value=="1"){
+                return "在库";
+            }else{
+                return "出库";
+            }
+        }
+        function outStock(){
+            var node=$("#userDatagrid1").datagrid("getSelected");
+            if(null==node){
+                $.messager.alert("提醒", "请选择要操作的记录!", "info", function () {
+                });
+                return false;
+            }
+            $("#id").val(node.id);
+            $("#name").val(node.name);
+            $("#goods").combobox("setValue",node.goods.id)
+            $("#vendor").combobox("setValue",node.vendor.id)
+            $("#assetCoding").val(node.assetCoding);
+            $("#assetType").val(node.assetType);
+            $("#deviceCoding").val(node.deviceCoding);
+            $("#company").val(node.deviceCoding);
+            $("#configure").val(node.configure);
+            $("#context").val(node.context);
+            $("#storage").dialog("open");
+        }
+        /*]]>*/
+    </script>
+</head>
+<body>
+<div id="userDatagridToolbar">
+    <table style="width: 98%">
+        <tr style="width: 98%">
+            <td>类型</td>
+            <td><input name="goods" id="goods1"></input></td>
+            <td>品牌型号</td>
+            <td><input name="vendor" id="vendor1"></input></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>入库日期起</td>
+            <td><input name="startCreateTime" id="startCreateTime1"></input></td>
+            <td>入库日期止</td>
+            <td><input name="endCreateTime" id="endCreateTime1"></input></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr style="width: 98%">
+            <td>设备编码</td>
+            <td><input name="deviceCoding" id="deviceCoding1"></input></td>
+            <td>资产编码</td>
+            <td><input name="assetCoding" id="assetCoding1"></input></td>
+            <td>资产类型</td>
+            <td><input name="assetType" id="assetType1"></input></td>
+        </tr>
+        <tr style="width: 98%">
+            <td>名称</td>
+            <td><input name="name" id="name1"></input></td>
+            <td>状态</td>
+            <td><select name="state" id="state1" class="easyui-combobox" style="width: 178px;">
+                <option value="">全部</option>
+                <option value="1">在库</option>
+                <option value="0">在用</option>
+            </select></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr style="width: 98%" align="right">
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>
+                <a data-url="updateVendor" href="javascript:void(0)" class="easyui-linkbutton c2" iconCls="icon-edit"
+                   onclick="query()">查询</a>
+                <a data-url="updateVendor" href="javascript:void(0)" class="easyui-linkbutton c2" iconCls="icon-edit"
+                   onclick="outStock()">出库</a>
+                <a data-url="updateVendor" href="javascript:void(0)" class="easyui-linkbutton c2" iconCls="icon-edit"
+                   onclick="goBack()">返回</a>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<table id="userDatagrid1" class="easyui-datagrid" url="/stock/stockInfo" title="" fit="true" border="true"
+       fitColumns="true" singleSelect="true" pagination="true" rownumbers="true" toolbar="#userDatagridToolbar">
+    <thead>
+    <tr>
+        <th data-options="field:'id',width:100">序号</th>
+        <th data-options="field:'name',width:100">名称</th>
+        <th data-options="field:'goods.name',width:100" formatter="goodsName">品牌</th>
+        <th data-options="field:'vendor.name',width:100" formatter="vendorName">型号</th>
+        <th data-options="field:'deviceCoding',width:100">设备编码</th>
+        <th data-options="field:'assetCoding',width:100">资产编码</th>
+        <th data-options="field:'assetType',width:100">资产类型</th>
+        <th data-options="field:'createTime',width:100">入库时间</th>
+        <th data-options="field:'state',width:100" formatter="setState">状态</th>
+        <th data-options="field:'createUser',width:100">入库人</th>
+        <th data-options="field:'discardedDate',width:100">报废日期</th>
+        <th data-options="field:'depart',width:100">部门</th>
+        <th data-options="field:'company',width:100">单位</th>
+        <th data-options="field:'configure',width:300">配置</th>
+        <th data-options="field:'context',width:300">入库说明</th>
+
+    </tr>
+    </thead>
+</table>
+<div id="storage">
+    <table>
+        <tr>
+            <td>商品分类:<input type="hidden" name="id" id="id"></input></td>
+            <td>
+                <input name="goods" id="goods" style="width: 170px;"></input>
+            </td>
+            <td>品牌型号:</td>
+            <td>
+                <input name="vendor" id="vendor" style="width: 170px;"></input>
+            </td>
+        </tr>
+        <tr>
+            <td>名称:</td>
+            <td>
+                <input name="name" id="name"></input>
+            </td>
+            <td>资产编码:</td>
+            <td>
+                <input name="assetCoding" id="assetCoding"></input>
+            </td>
+        </tr>
+        <tr>
+            <td>资产类型:</td>
+            <td>
+                <input name="assetType" id="assetType"></input>
+            </td>
+            <td>设备编码:</td>
+            <td>
+                <input name="deviceCoding" id="deviceCoding"></input>
+            </td>
+        </tr>
+        <tr>
+            <td>报废日期:</td>
+            <td><input name="discardedDate" id="discardedDate" style="width: 170px;"></input></td>
+            <td>数量:</td>
+            <td><input name="num" id="num"></input></td>
+        </tr>
+        <tr>
+            <td>分配单位:</td>
+            <td><input name="company" id="company"></input></td>
+            <td>分配部门:</td>
+            <td><input name="depart" id="depart"></input></td>
+        </tr>
+        <tr>
+            <td>配置:</td>
+            <td colspan="3">
+                <textarea id="configure" name="configure" style="width: 400px;"></textarea>
+            </td>
+        </tr>
+        <tr>
+            <td>入库说明:</td>
+            <td colspan="3">
+                <textarea id="context" name="context" style="width: 400px;"></textarea>
+            </td>
+
+        </tr>
+    </table>
+</div>
+</body>
+</html>

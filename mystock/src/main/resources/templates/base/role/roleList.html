@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Title</title>
+    <link rel="stylesheet" type="text/css" th:href="@{../../themes/default/easyui.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{../../themes/icon.css}"/>
+    <script type="text/javascript" th:src="@{../../jquery.min.js}"/>
+    <script type="text/javascript" th:src="@{../../jquery.easyui.min.js}"/>
+    <script type="text/javascript" th:src="@{../../locale/easyui-lang-zh_CN.js}"/>
+    <script type="text/javascript" th:inline="javascript">
+        /*<![CDATA[*/
+        $(function () {
+            $("#roleDialog").dialog({
+                title: '角色信息',
+                width: 500,
+                height: 200,
+                closed: true,
+                cache: false,
+                modal: true,
+                buttons: [{
+                    text: '确定',
+                    handler: function () {
+                        $("#roleFrom").submit();
+                    }
+                }, {
+                    text: '取消',
+                    handler: function () {
+                        $("#roleDialog").dialog("close");
+                    }
+                }]
+            });
+            $("#menuRole").dialog({
+                title: '菜单',
+                width: 500,
+                height: 400,
+                closed: true,
+                cache: false,
+                modal: true,
+                buttons: [{
+                    text: '确定',
+                    handler: function () {
+                        var roleNode = $("#tt").tree("getSelected");
+                        var menuNodes = $("#menu").tree("getChecked");
+                        var param = {};
+                        param.role = roleNode.id;
+                        param.menus = "";
+                        for (var i = 0; i < menuNodes.length; i++) {
+                            if (param.menus != "") {
+                                param.menus += ",";
+                            }
+                            param.menus+=menuNodes[i].id;
+                        }
+                        $.ajax({
+                            url: "/base/roleMenu",
+                            type: "post",
+                            async: "true",
+                            data: param,
+                            success: function (data) {
+                                $.messager.alert("提示","授权成功！","info",function(){
+                                    $("#menuRole").dialog("close");
+
+                                });
+
+                            }
+                        });
+                    }
+                }, {
+                    text: '取消',
+                    handler: function () {
+                        $("#menuRole").dialog("close");
+                    }
+                }]
+            });
+            $("#userRole").dialog({
+                title: '用户',
+                width: 500,
+                height: 400,
+                closed: true,
+                cache: false,
+                modal: true,
+                buttons: [{
+                    text: '确定',
+                    handler: function () {
+                        var roleNode = $("#tt").tree("getSelected");
+                        var rows = $("#userDatagrid").datagrid("getChecked");
+                        var param = {};
+                        param.role = roleNode.id;
+                        param.users = "";
+                        for (var i = 0; i < rows.length; i++) {
+                            if (param.users != "") {
+                                param.users += ",";
+                            }
+                            param.users+=rows[i].id;
+                        }
+                        $.ajax({
+                            url: "/role/roleUser",
+                            type: "post",
+                            async: "true",
+                            data: param,
+                            success: function (data) {
+                                $.messager.alert("提示","授权成功！","info",function(){
+                                    $("#userRole").dialog("close");
+                                });
+                            }
+                        });
+                    }
+                }, {
+                    text: '取消',
+                    handler: function () {
+                        $("#userRole").dialog("close");
+                    }
+                }]
+            });
+
+            $("#menu").tree({
+                url: '/base/menu?sourcePage=1',
+                checkbox: true
+            });
+
+            $("#tt").tree({
+                url: '/base/role',
+                onContextMenu: roleShow
+            });
+
+            $("#new").on('click', function () {
+                var node = $("#tt").tree('getSelected');
+                $("#text").val("");
+                $("#pid").val(node.id);
+                $("#id").val("");
+                $("#roleDialog").dialog('open');
+            });
+
+            $("#edit").on('click', function () {
+                var node = $("#tt").tree('getSelected');
+                console.info(node.pid.id);
+                if (null != node) {
+                    $("#id").val(node.id);
+                    $("#pid").val(node.pid.id);
+                    $("#text").val(node.text);
+                }
+                $("#roleDialog").dialog('open');
+            });
+
+            $("#delete").on('click', function () {
+                var node = $("#tt").tree('getSelected');
+                if ('0' == node.id) {
+                    $.messager.alert("消息", "根结点不能删除！", "info");
+                    return false;
+                }
+                $.messager.confirm('确认删除', '您确定要删除所选吗？', function (r) {
+                    if (r) {
+                        $.ajax({
+                            url: "/base/validRole",
+                            type: "post",
+                            async: "true",
+                            data: {"id": node.id},
+                            success: function (data) {
+                                var d = $.parseJSON(data);
+                                if (d.res == 0) {
+                                    $.ajax({
+                                        url: "/base/delRole",
+                                        type: "post",
+                                        async: "true",
+                                        data: {"id": node.id},
+                                        success: function (data) {
+                                            console.info(data);
+                                        }
+                                    });
+                                } else {
+                                    $.messager.alert("消息", "请先删除子角色！", "info");
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+            $("#menuOwner").on('click', function () {
+
+                $("#menu").tree("reload");
+                $("#menuRole").dialog("open");
+            });
+
+            $("#userOwner").on('click', function () {
+                $("#userDatagrid").datagrid("reload");
+                $("#userRole").dialog("open");
+            });
+
+        });
+
+        function roleShow(e, node) {
+            e.preventDefault();
+            $("#tt").tree('select', node.target);
+            $("#mm").menu('show', {left: e.pageX, top: e.pageY});
+
+        }
+
+        /*]]>*/
+    </script>
+</head>
+<body>
+<ul id="tt"></ul>
+<div id="mm" class="easyui-menu" style="width:120px;">
+    <div id="new">新建</div>
+    <div id="edit">修改</div>
+    <div id="delete">删除</div>
+    <div id="menuOwner">菜单售权</div>
+    <div id="userOwner">用户售权</div>
+</div>
+<div id="roleDialog">
+    <form id="roleFrom" name="roleFrom" action="/base/roleSave">
+        <table>
+            <tr>
+                <td>角色
+                </td>
+                <td>
+                    <input type="hidden" name="id" id="id"></input>
+                    <input type="hidden" id="pid" name="pid"></input>
+                    <input name="text" id="text"></input>
+                </td>
+            </tr>
+        </table>
+    </form>
+</div>
+<div id="menuRole">
+    <ul id="menu"></ul>
+</div>
+<div id="userRole">
+    <div id="userDatagridToolbar" style="float: right;">
+        姓名：<input name="name" size="10" /> <a data-url="searchUser" href="javascript:void(0)" class="easyui-linkbutton c5" iconCls="icon-search">搜索</a>
+    </div>
+    <table  id="userDatagrid" class="easyui-datagrid" url="/role/userList" title="" fit="true" border="true"
+            fitColumns="true" singleSelect="false" pagination="true" rownumbers="true" toolbar="#userDatagridToolbar" >
+        <thead>
+        <tr>
+            <th data-options="field:'ck',checkbox:true"></th>
+            <th data-options="field:'id',width:100">编号</th>
+            <th data-options="field:'username',width:300">登录账号</th>
+            <th data-options="field:'name',width:300">姓名</th>
+            <th data-options="field:'iPhone',width:300">电话</th>
+        </tr>
+        </thead>
+    </table>
+</div>
+</body>
+</html>

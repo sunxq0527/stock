@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head>
+    <meta charset="UTF-8"></meta>
+    <title>商品管理</title>
+    <link rel="stylesheet" type="text/css" th:href="@{../../themes/default/easyui.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{../../themes/icon.css}"/>
+    <script type="text/javascript" th:src="@{../../jquery.min.js}"/>
+    <script type="text/javascript" th:src="@{../../jquery.easyui.min.js}"/>
+    <script type="text/javascript" th:src="@{../../locale/easyui-lang-zh_CN.js}"/>
+    <script type="text/javascript">
+        /*<![CDATA[*/
+        $(function () {
+            $('#goods').combobox({
+                url: '/vendor/goods',
+                valueField: 'id',
+                textField: 'text',
+                onSelect: function (row) {
+                    $('#vendor').combobox({
+                        url: '/goods/vendorCase?id=' + row.id,
+                        valueField: 'id',
+                        textField: 'text'
+                    });
+                }
+            });
+            $('#discardedDate').datebox({});
+
+            $('#storage').dialog({
+                title: '入库',
+                width: 500,
+                height: 280,
+                closed: true,
+                cache: false,
+                modal: true,
+                buttons: [{
+                    text: '保存',
+                    handler: function () {
+                        var param = {};
+                        param.id = $("#id").val();
+                        param.name = $("#name").val();
+                        param.goods = $("#goods").combobox("getValue")
+                        param.vendor = $("#vendor").combobox("getValue")
+                        param.assetCoding = $("#assetCoding").val();
+                        param.assetType = $("#assetType").val();
+                        param.deviceCoding = $("#deviceCoding").val();
+                        param.discardedDate = $("#discardedDate").datebox("getValue");
+                        param.deviceCoding = $("#deviceCoding").val();
+                        param.num = $("#num").val();
+                        param.configure = $("#configure").val();
+                        param.context = $("#context").val();
+                        param.state = "1";
+                        $.messager.confirm('确认操作', '您确定要进行操作吗？', function (r) {
+                            if (r) {
+                                $.ajax({
+                                    url: "/stock/addStock",
+                                    type: "post",
+                                    async: "true",
+                                    data: param,
+                                    success: function (data) {
+                                        var d = $.parseJSON(data);
+                                        if (d.res == 1) {
+                                            $.messager.alert("提示", "操作成功！", "info", function () {
+                                                $("#storage").dialog("close");
+                                                $("#userDatagrid").datagrid("reload");
+                                            });
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                    }
+                }, {
+                    text: '关闭',
+                    handler: function () {
+                        $('#storage').dialog('close');
+                    }
+                }]
+            });
+        });
+
+
+        function outStock(value, row) {
+            return "<a href='javascript:void(0);' onClick='goOutStock(\"" + row.id + "\")'>" + value + "</a>";
+
+        }
+
+        function goOutStock(id) {
+            window.location.href = "/stock/stock";
+        }
+
+        function add(){
+            $("#id").val();
+            $("#name").val();
+            $("#assetCoding").val();
+            $("#assetType").val();
+            $("#deviceCoding").val();
+            $("#deviceCoding").val();
+            $("#num").val();
+            $("#configure").val();
+            $("#context").val();
+            $('#storage').dialog("open");
+        }
+
+        /*]]>*/
+    </script>
+</head>
+<body>
+<div id="userDatagridToolbar" style="float: right;">
+    <a data-url="addVendor" href="javascript:void(0)" class="easyui-linkbutton c1" iconCls="icon-add"
+       onclick="add()">入库</a>
+</div>
+<table id="userDatagrid" class="easyui-datagrid" url="/stock/stockList" title="" fit="true" border="true"
+       fitColumns="true" singleSelect="true" pagination="true" rownumbers="true" toolbar="#userDatagridToolbar">
+    <thead>
+    <tr>
+        <th data-options="field:'name',width:200">名称</th>
+        <th data-options="field:'tot',width:200" formatter="outStock">总数</th>
+        <th data-options="field:'out',width:200">出库</th>
+        <th data-options="field:'in',width:200">在库</th>
+    </tr>
+    </thead>
+</table>
+<div id="storage">
+    <table>
+        <tr>
+            <td>商品分类:</td>
+            <td>
+                <input name="goods" id="goods" style="width: 170px;"></input>
+            </td>
+            <td>品牌型号:</td>
+            <td>
+                <input name="vendor" id="vendor" style="width: 170px;"></input>
+            </td>
+        </tr>
+        <tr>
+            <td>名称:</td>
+            <td>
+                <input name="name" id="name"></input>
+            </td>
+            <td>资产编码:</td>
+            <td>
+                <input name="assetCoding" id="assetCoding"></input>
+            </td>
+        </tr>
+        <tr>
+            <td>资产类型:</td>
+            <td>
+                <input name="assetType" id="assetType"></input>
+            </td>
+            <td>设备编码:</td>
+            <td>
+                <input name="deviceCoding" id="deviceCoding"></input>
+            </td>
+        </tr>
+        <tr>
+            <td>报废日期:</td>
+            <td><input name="discardedDate" id="discardedDate"></input></td>
+            <td>数量:</td>
+            <td><input name="num" id="num"></input></td>
+        </tr>
+        <tr>
+            <td>配置:</td>
+            <td colspan="3">
+                <textarea id="configure" name="configure" style="width: 400px;"></textarea>
+            </td>
+        </tr>
+        <tr>
+            <td>入库说明:</td>
+            <td colspan="3">
+                <textarea id="context" name="context" style="width: 400px;"></textarea>
+            </td>
+
+        </tr>
+    </table>
+</div>
+</body>
+</html>

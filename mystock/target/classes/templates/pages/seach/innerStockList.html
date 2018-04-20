@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head>
+    <meta charset="UTF-8"></meta>
+    <title>库存查询</title>
+    <link rel="stylesheet" type="text/css" th:href="@{../../themes/default/easyui.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{../../themes/icon.css}"/>
+    <script type="text/javascript" th:src="@{../../jquery.min.js}"/>
+    <script type="text/javascript" th:src="@{../../jquery.easyui.min.js}"/>
+    <script type="text/javascript" th:src="@{../../locale/easyui-lang-zh_CN.js}"/>
+    <script type="text/javascript">
+        /*<![CDATA[*/
+        $(function () {
+             $('#goods1').combobox({
+                url: '/vendor/goods',
+                valueField: 'id',
+                textField: 'text',
+                onSelect: function (row) {
+                    $('#vendor1').combobox({
+                        url: '/goods/vendorCase?id=' + row.id,
+                        valueField: 'id',
+                        textField: 'text'
+                    });
+                }
+            });
+            $('#startCreateTime1').datebox({});
+            $('#endCreateTime1').datebox({});
+
+        });
+
+        function query() {
+            var param = {};
+            param.goods = $("#goods1").combobox("getValue");
+            param.vendor = $("#vendor1").combobox("getValue");
+            param.stateCreateTime = $("#startCreateTime1").datebox("getValue");
+            param.endCreateTime = $("#endCreateTime1").datebox("getValue");
+            param.deviceCoding = $("#deviceCoding1").val();
+            param.assetCodeing = $("#assetCodeing1").val();
+            param.assetType = $("#assetType1").val();
+            param.name = $("#name1").val();
+            $("#userDatagrid1").datagrid('options').queryParams = param;
+            $("#userDatagrid1").datagrid('reload');
+        }
+
+        function goodsName(value, row) {
+            return row.goods.name;
+        }
+
+        function vendorName(value, row) {
+            return row.vendor.brand + "-" + row.vendor.name;
+        }
+
+        function setState(value,row){
+            if(value=="1"){
+                return "在库";
+            }else{
+                return "出库";
+            }
+        }
+
+        /*]]>*/
+    </script>
+</head>
+<body>
+<div id="userDatagridToolbar">
+    <table style="width: 98%">
+        <tr style="width: 98%">
+            <td>类型</td>
+            <td><input name="goods" id="goods1"></input></td>
+            <td>品牌型号</td>
+            <td><input name="vendor" id="vendor1"></input></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>入库日期起</td>
+            <td><input name="startCreateTime" id="startCreateTime1"></input></td>
+            <td>入库日期止</td>
+            <td><input name="endCreateTime" id="endCreateTime1"></input></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr style="width: 98%">
+            <td>设备编码</td>
+            <td><input name="deviceCoding" id="deviceCoding1"></input></td>
+            <td>资产编码</td>
+            <td><input name="assetCoding" id="assetCoding1"></input></td>
+            <td>资产类型</td>
+            <td><input name="assetType" id="assetType1"></input></td>
+        </tr>
+        <tr style="width: 98%">
+            <td>名称</td>
+            <td><input name="name" id="name1"></input></td>
+            <td></td>
+            <td><input type="hidden" name="state" id="state1" value="1"></input></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr style="width: 98%;" align="right">
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>
+                <a data-url="updateVendor" href="javascript:void(0)" class="easyui-linkbutton c2" iconCls="icon-edit"
+                   onclick="query()">查询</a>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<table id="userDatagrid1" class="easyui-datagrid" url="/seach/innerStock?state=1" title="" fit="true" border="true"
+       fitColumns="true" singleSelect="true" pagination="true" rownumbers="true" toolbar="#userDatagridToolbar">
+    <thead>
+    <tr>
+        <th data-options="field:'id',width:100">序号</th>
+        <th data-options="field:'name',width:100">名称</th>
+        <th data-options="field:'goods.name',width:100" formatter="goodsName">品牌</th>
+        <th data-options="field:'vendor.name',width:100" formatter="vendorName">型号</th>
+        <th data-options="field:'deviceCoding',width:100">设备编码</th>
+        <th data-options="field:'assetCoding',width:100">资产编码</th>
+        <th data-options="field:'assetType',width:100">资产类型</th>
+        <th data-options="field:'createTime',width:100">入库时间</th>
+        <th data-options="field:'state',width:100" formatter="setState">状态</th>
+        <th data-options="field:'createUser',width:100">入库人</th>
+        <th data-options="field:'discardedDate',width:100">报废日期</th>
+        <th data-options="field:'depart',width:100">部门</th>
+        <th data-options="field:'company',width:100">单位</th>
+        <th data-options="field:'discardedDate',width:300">配置</th>
+        <th data-options="field:'discardedDate',width:300">入库说明</th>
+
+    </tr>
+    </thead>
+</table>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head>
+    <meta charset="UTF-8"></meta>
+    <title>商品管理</title>
+    <link rel="stylesheet" type="text/css" th:href="@{../../themes/default/easyui.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{../../themes/icon.css}"/>
+    <script type="text/javascript" th:src="@{../../jquery.min.js}"/>
+    <script type="text/javascript" th:src="@{../../jquery.easyui.min.js}"/>
+    <script type="text/javascript" th:src="@{../../locale/easyui-lang-zh_CN.js}"/>
+    <style type="text/css">
+        .mask { position: absolute; top: 0px; filter: alpha(opacity=70);opacity:0.7; -moz-opacity:0.7; background-color: #ccc; z-index: 9999; left: 0px; }
+        .hide {display:none;}
+        .title1280 h2{ display: block!important;}
+        body{ text-align:center; margin-top: 100px;}
+    </style>
+    <script type="text/javascript">
+        /*<![CDATA[*/
+        function callback(divName,mes){
+            $("#"+divName).removeAttr("style").hide();
+            $("#message").html(mes);
+            $("#mask").removeAttr("height");
+            $("#mask").removeAttr("width");
+            $("#mask").hide();
+            $("#note").hide();
+        }
+        function add(){
+            var file = $("#file").val();
+            if(null==file||""==file){
+                $.messager.alert("提醒", "请上传文件!", "info", function () {
+                });
+                return false;
+            }
+            $("#fileForm").submit();
+            showDivCenter("loadingDiv");
+        }
+        function showDivCenter(divName){
+            var i=0;
+            setInterval(function(){
+                $("#timespan").html(i++);
+            }, 1000);
+            var left = (document.body.clientWidth - $("#"+divName).width())/2;
+            var scrollLeft = $(document).scrollLeft();
+            $("#"+divName).css( { position : 'absolute', 'top' : 200, left : left + scrollLeft } ).show();
+            $("#mask").css("height",$(document).height());
+            $("#mask").css("width",$(document).width());
+            $("#mask").show();
+        }
+        /*]]>*/
+
+    </script>
+</head>
+<body>
+<span id="message" style="color: #c9302c;"></span>
+<div style="padding-top: inherit;">
+    <form method="POST" enctype="multipart/form-data" action="/upload" id="fileForm" target="hidden_frame">
+        <p>
+            文件：<input type="file" name="file" id="file"/>
+        </p>
+        <p>
+            <a href="/testDownload" class="easyui-linkbutton">下载模版</a>&nbsp;&nbsp;
+            <a data-url="addVendor" href="javascript:void(0);" class="easyui-linkbutton c1" onclick="add()">上传</a>
+
+        </p>
+    </form>
+    <iframe name='hidden_frame' src='' id="hidden_frame" style='display:none'></iframe>
+    <div id="mask" class="mask hide"></div>
+    <div id="loadingDiv" style="width:150px;height:70px;text-align:center;display:none;z-index: 10000;background:#ddeeff;border:1px solid #a9d5ff;">
+        <div style="margin-top:10px">正在导入,请稍后...</div>
+        <div style="margin-top:10px">用时<span id='timespan' style='color:#c00'></span>秒</div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Title</title>
+    <link rel="stylesheet" type="text/css" th:href="@{../../themes/default/easyui.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{../../themes/icon.css}"/>
+    <script type="text/javascript" th:src="@{../../jquery.min.js}"/>
+    <script type="text/javascript" th:src="@{../../locale/easyui-lang-zh_CN.js}"/>
+    <script type="text/javascript" th:src="@{../../jquery.easyui.min.js}"/>
+    <script type="text/javascript" th:inline="javascript">
+        /*<![CDATA[*/
+        $(function () {
+            $("#menuDialog").dialog({
+                title: '菜单信息',
+                width: 500,
+                height: 200,
+                closed: true,
+                cache: false,
+                modal: true,
+                buttons: [{
+                    text: '确定',
+                    handler: function () {
+                        $("#menuFrom").submit();
+                    }
+                }, {
+                    text: '取消',
+                    handler: function () {
+                        $("#menuDialog").dialog('close');
+                    }
+                }]
+            });
+
+            $("#tt").tree({
+                url: '/base/menu?sourcePage=1',
+                onContextMenu: menuShow
+            });
+
+            $("#new").on('click', function () {
+                var node = $("#tt").tree('getSelected');
+                $("#id").val("");
+                $("#pid").val(node.id);
+                $("#text").val("");
+                $("#url").val("");
+                $("#select").val("1");
+                $("#menuDialog").dialog('open');
+            });
+
+            $("#edit").on('click', function () {
+                var node = $("#tt").tree('getSelected');
+                console.info(node);
+                if(null!=node){
+                    $("#id").val(node.id);
+                    $("#pid").val(node.pid);
+                    $("#text").val(node.text);
+                    $("#url").val(node.url);
+                    $("#select").val(node.state);
+                }
+                $("#menuDialog").dialog('open');
+            });
+
+        });
+
+        function menuShow(e, node) {
+            e.preventDefault();
+            $("#tt").tree('select',node.target);
+            $("#mm").menu('show', {left: e.pageX, top: e.pageY});
+
+        }
+
+        /*]]>*/
+    </script>
+</head>
+<body>
+<ul id="tt"></ul>
+<div id="mm" class="easyui-menu" style="width:120px;">
+    <div id="new">新建</div>
+    <div id="edit">修改</div>
+    <div id="delete">删除</div>
+    <div id="owner">售权</div>
+</div>
+<div id="menuDialog">
+    <form name="menuFrom" id="menuFrom" action="/base/menuSave">
+        <table>
+            <tr>
+                <td>名称
+                    <input type="hidden" name="id" id="id"></input>
+                    <input type="hidden" id="pid" name="pid"></input>
+                </td>
+                <td><input name="text" id="text" style="width: 180px;"></input></td>
+                <td>地址</td>
+                <td><input name="url" id="url" style="width: 180px;"></input></td>
+            </tr>
+            <tr>
+                <td>是否启用</td>
+                <td><select name="isValid" id="isValid">
+                        <option value="1">启用</option>
+                        <option value="0">失效</option>
+                    </select>
+                </td>
+                <td></td>
+                <td>
+                </td>
+            </tr>
+        </table>
+    </form>
+</div>
+</body>
+</html>

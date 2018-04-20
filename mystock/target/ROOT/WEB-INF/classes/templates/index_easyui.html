@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Title</title>
+    <link rel="stylesheet" type="text/css" th:href="@{themes/default/easyui.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{themes/icon.css}"/>
+    <script type="text/javascript" th:src="@{jquery.min.js}"/>
+    <script type="text/javascript" th:src="@{locale/easyui-lang-zh_CN.js}"/>
+    <script type="text/javascript" th:src="@{jquery.easyui.min.js}"/>
+    .
+    <script type="text/javascript" th:inline="javascript">
+        /*<![CDATA[*/
+        var index = 1;
+        $(function () {
+            $('#passwrodDialog').dialog({
+                title: '修改密码',
+                width: 260,
+                height: 150,
+                closed: true,
+                cache: false,
+                modal: true,
+                buttons: [{
+                    text: '保存',
+                    handler: function () {
+                        var param = {};
+                        param.password = $("#password").val();
+                        param.agPassword = $("#agPassword").val();
+
+                        $.messager.confirm('确认操作', '您确定要进行操作吗？', function (r) {
+                            if (r) {
+                                $.ajax({
+                                    url: "/user/editPassword",
+                                    type: "post",
+                                    async: "true",
+                                    data: param,
+                                    success: function (data) {
+                                        var d = $.parseJSON(data);
+                                        if (d.res == 1) {
+                                            $.messager.alert("提示", "密码修改成功！", "info", function () {
+                                                $("#vendorDialog").dialog("close");
+                                                $("#userDatagrid").datagrid("reload");
+                                                window.location.href="/loginOut";
+                                            });
+                                        }else{
+                                            $.messager.alert("提示", "修改失败，两次输入密码不同！", "info", function () {
+                                            });
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                    }
+                }, {
+                    text: '关闭',
+                    handler: function () {
+                        $('#passwrodDialog').dialog('close');
+                    }
+                }]
+            });
+            $("#tt").tree({
+                url: '/base/menu',
+                lines: false,
+                onClick: clickNode
+
+            });
+
+            $('#tabs').tabs({
+                border: false,
+                title: '首页',
+                closable: true,
+                onClose:function(){
+                    index--;
+                }
+            });
+        });
+
+        function clickNode(node) {
+            if (node.isLeaf == 1) {
+                if (index <= 8) {
+                    $('#tabs').tabs('add', {
+                        title: node.text,
+                        content: '<iframe id="tab_' + index + '" scrolling="no" width="100%" height="100%" style="_width: 100%;"frameborder="0" name="_blank" id="_blank" ></iframe>',
+                        closable: true
+                    });
+                    $("#tab_" + index).attr('src', node.url);
+                    index++;
+                } else {
+                    $.messager.alert('警告', '窗口过多！');
+                }
+            }
+        }
+
+        function loginOut(){
+            $.messager.confirm('确认操作', '您确定要登出操作吗？', function (r) {
+                if(r){
+                    window.location.href="/loginOut";
+                }
+            });
+        }
+
+        function editPassword(){
+            $("#password").val("");
+            $("#agPassword").val("");
+            $('#passwrodDialog').dialog("open");
+        }
+        /*]]>*/
+    </script>
+</head>
+<body class="easyui-layout">
+<div data-options="region:'north'" style="height:80px">
+    <table width="99%">
+        <tr>
+            <td><img src="/img/logo.jpg" style="height: 50px;width: 150px;padding-top: 15px;padding-left:10px;"></img></td>
+            <td></td>
+            <td></td>
+            <td align="right" style="margin-left: 5px;font-size: 18px;"><a onclick="editPassword()">修改密码</a>&nbsp;&nbsp;
+                                                        <a onclick="loginOut()">登出</a>
+            </td>
+        </tr>
+    </table>
+
+</div>
+<!--<div data-options="region:'south',split:true" style="height:50px;"></div>-->
+<div data-options="region:'west',split:true" title="菜单" style="width:13%;">
+    <div id="tt"></div>
+</div>
+<div data-options="region:'center',title:''" style="width:87%;height: 100%;">
+    <div id="tabs" style="height: 100%;width: 100%;"></div>
+</div>
+<div id="passwrodDialog">
+    <table style="padding-top: 5px;">
+        <tr>
+            <td>新密码</td>
+            <td><input type="password" name="password" id="password"></input></td>
+        </tr>
+        <tr>
+            <td>再输一次</td>
+            <td><input type="password" name="agPassword" id="agPassword"></input></td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>
